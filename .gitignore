@@ -1,0 +1,108 @@
+# ===================================================================
+# Git Ignore for CS 1.6 Tournament Stream HUD & Match System
+# Repository: https://github.com/Anas6800/Cs-1.6-Tournament-Hud
+# ===================================================================
+
+# --- Ignore All Game Engine, Installer & Base Files in Root ---
+*.dat
+*.ini
+*.inf
+*.bat
+!cstrike/obs_overlay/Open Config.bat
+*.txt
+!README.md
+!cstrike/obs_overlay/overlay_config.txt
+*.cfg
+*.vdf
+*.db
+start_match.py
+test_system.py
+
+# --- Crash Dumps & Memory Dumps (High Security Risk) ---
+*.mdmp
+*.dmp
+Steam_*.mdmp
+crashhandler.dll
+
+# --- Server Logs & Connection History (IPs, SteamIDs, RCON Logs) ---
+logs/
+cstrike/logs/
+cstrike/addons/amxmodx/logs/
+*.log
+
+# --- Personal Gameplay Screenshots ---
+Screenshots/
+cstrike/Screenshots/
+*.bmp
+*.tga
+
+# --- Personal Configs & Admin Credentials ---
+.env
+cstrike/config.cfg
+cstrike/userconfig.cfg
+cstrike/autoexec.cfg
+cstrike/addons/amxmodx/configs/users.ini
+cstrike/addons/amxmodx/configs/vault.ini
+cstrike/addons/amxmodx/data/
+
+# --- Proprietary Valve / GoldSrc Game Binaries & Assets ---
+*.exe
+*.dll
+*.asi
+valve/
+platform/
+gldrv/
+update/
+reslists/
+config/
+cstrike/dlls/
+cstrike/cl_dlls/
+cstrike/modules/
+
+# --- Heavy Map, Audio, Model Assets ---
+cstrike/maps/
+cstrike/models/
+cstrike/sound/
+cstrike/overviews/
+cstrike/gfx/
+cstrike/sprites/
+cstrike/wad/
+*.bsp
+*.wad
+*.nav
+*.dem
+*.mp3
+*.wav
+
+# --- Python & Editor Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.bak
+*.tmp
+.vscode/
+.idea/
+
+# --- Whitelist Only Tournament HUD & Custom AMX Mod Files in cstrike/ ---
+cstrike/*
+!cstrike/obs_overlay
+!cstrike/addons
+
+cstrike/addons/*
+!cstrike/addons/amxmodx
+
+cstrike/addons/amxmodx/*
+!cstrike/addons/amxmodx/scripting
+!cstrike/addons/amxmodx/plugins
+!cstrike/addons/amxmodx/configs
+
+cstrike/addons/amxmodx/scripting/*
+!cstrike/addons/amxmodx/scripting/cs_stream_hud.sma
+
+cstrike/addons/amxmodx/plugins/*
+!cstrike/addons/amxmodx/plugins/cs_stream_hud.amxx
+
+cstrike/addons/amxmodx/configs/*
+!cstrike/addons/amxmodx/configs/amxmd/
+!cstrike/addons/amxmodx/configs/amxmd/**
+!cstrike/addons/amxmodx/configs/users.ini.example

@@ -1,0 +1,1 @@
+window.setPlayerData({"timer":{"state":"freeze","seconds":15,"c4_seconds":0,"bomb_planted":0},"ct":[{"name":"Player 1","hp":100,"alive":1,"weapon":"m4a1","kit":1,"bomb":0}],"t":[{"name":"Player 2","hp":100,"alive":1,"weapon":"ak47","kit":0,"bomb":1}]});

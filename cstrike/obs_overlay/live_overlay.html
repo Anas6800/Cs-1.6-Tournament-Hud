@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS 1.6 Stream Scoreboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --team1-color: #00ff41;
+            --team2-color: #ff4757;
+            --status-color: #ffaa00;
+            --border-color: #00ff41;
+            --bg-color: rgba(10, 16, 26, 0.92);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 25px;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .scoreboard-container {
+            display: inline-flex;
+            align-items: center;
+            background: var(--bg-color);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 255, 65, 0.2);
+            backdrop-filter: blur(12px);
+            min-width: 580px;
+            max-width: 900px;
+            position: relative;
+            user-select: none;
+            transition: border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        .team-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .team1 {
+            justify-content: flex-end;
+            text-align: right;
+        }
+
+        .team2 {
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .team-name {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 220px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+        }
+
+        .team1 .team-name {
+            color: var(--team1-color);
+        }
+
+        .team2 .team-name {
+            color: var(--team2-color);
+        }
+
+        .score-pill {
+            font-family: 'Teko', sans-serif;
+            font-size: 46px;
+            font-weight: 700;
+            line-height: 1;
+            min-width: 54px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 0 10px;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .team1 .score-pill {
+            color: var(--team1-color);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+        }
+
+        .team2 .score-pill {
+            color: var(--team2-color);
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+
+        .score-bump {
+            animation: bump 0.4s ease-out;
+        }
+
+        @keyframes bump {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .center-hub {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: rgba(255, 170, 0, 0.18);
+            color: var(--status-color);
+            border: 1px solid var(--status-color);
+            margin-bottom: 3px;
+            text-shadow: 0 0 8px rgba(255, 170, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .status-badge.live {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+            border-color: #ff4757;
+            animation: pulse-live 2s infinite;
+        }
+
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(0.97); }
+        }
+
+        .vs-text {
+            font-size: 18px;
+            font-weight: 700;
+            color: #6a7c93;
+            letter-spacing: 1px;
+        }
+
+        /* Leader highlight */
+        .leading {
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
+        }
+    </style>
+</head>
+<body>
+    <div class="scoreboard-container" id="board">
+        <div class="team-box team1">
+            <span class="team-name" id="team1Name">BB</span>
+            <div class="score-pill" id="team1Score">0</div>
+        </div>
+
+        <div class="center-hub">
+            <div class="status-badge" id="matchStatus">WAITING</div>
+            <div class="vs-text">VS</div>
+        </div>
+
+        <div class="team-box team2">
+            <div class="score-pill" id="team2Score">0</div>
+            <span class="team-name" id="team2Name">AA</span>
+        </div>
+    </div>
+
+    <script>
+        let prevScore1 = null;
+        let prevScore2 = null;
+
+        // Global callback for live_data.js (works with zero CORS restrictions on file://)
+        window.setScores = function(t1Name, t1Score, t2Name, t2Score, status, t1Color, t2Color, borderColor, statusColor) {
+            applyData(t1Name, t1Score, t2Name, t2Score, status, t1Color, t2Color, borderColor, statusColor);
+        };
+
+        function applyData(t1Name, t1Score, t2Name, t2Score, status, t1Color, t2Color, borderColor, statusColor) {
+            if (!t1Name && !t2Name) return;
+
+            if (t1Color) document.documentElement.style.setProperty('--team1-color', t1Color);
+            if (t2Color) document.documentElement.style.setProperty('--team2-color', t2Color);
+            if (borderColor) document.documentElement.style.setProperty('--border-color', borderColor);
+            if (statusColor) document.documentElement.style.setProperty('--status-color', statusColor);
+
+            const t1NameEl = document.getElementById('team1Name');
+            const t2NameEl = document.getElementById('team2Name');
+            if (t1NameEl && t1NameEl.textContent !== t1Name) t1NameEl.textContent = t1Name;
+            if (t2NameEl && t2NameEl.textContent !== t2Name) t2NameEl.textContent = t2Name;
+
+            const t1ScoreEl = document.getElementById('team1Score');
+            const t2ScoreEl = document.getElementById('team2Score');
+            if (t1ScoreEl && t2ScoreEl) {
+                const s1 = parseInt(t1Score, 10) || 0;
+                const s2 = parseInt(t2Score, 10) || 0;
+
+                if (prevScore1 !== null && s1 !== prevScore1) {
+                    t1ScoreEl.classList.remove('score-bump');
+                    void t1ScoreEl.offsetWidth;
+                    t1ScoreEl.classList.add('score-bump');
+                }
+                if (prevScore2 !== null && s2 !== prevScore2) {
+                    t2ScoreEl.classList.remove('score-bump');
+                    void t2ScoreEl.offsetWidth;
+                    t2ScoreEl.classList.add('score-bump');
+                }
+
+                t1ScoreEl.textContent = s1;
+                t2ScoreEl.textContent = s2;
+                prevScore1 = s1;
+                prevScore2 = s2;
+
+                t1ScoreEl.classList.toggle('leading', s1 > s2);
+                t2ScoreEl.classList.toggle('leading', s2 > s1);
+            }
+
+            const statusEl = document.getElementById('matchStatus');
+            if (statusEl) {
+                const st = (status || 'WAITING').toUpperCase();
+                statusEl.textContent = st;
+                statusEl.classList.toggle('live', st === 'LIVE');
+            }
+        }
+
+        // Script-tag loader: Completely bypasses file:// CORS restrictions in Chrome/Edge!
+        function loadViaScript() {
+            const oldScript = document.getElementById('liveDataScript');
+            if (oldScript) oldScript.remove();
+
+            const script = document.createElement('script');
+            script.id = 'liveDataScript';
+            script.src = `live_data.js?_=${Date.now()}`;
+            document.body.appendChild(script);
+        }
+
+        // Fetch fallback for HTTP or CEF
+        async function loadViaFetch() {
+            try {
+                const res = await fetch(`live_scores.txt?_=${Date.now()}`);
+                if (!res.ok) return false;
+                const text = (await res.text()).trim();
+                if (!text) return false;
+                const parts = text.split('|');
+                if (parts.length >= 5) {
+                    applyData(
+                        parts[0], parts[1],
+                        parts[2], parts[3],
+                        parts[4],
+                        parts[5] || null, parts[6] || null, parts[7] || null, parts[8] || null
+                    );
+                    return true;
+                }
+            } catch (e) {
+                return false;
+            }
+            return false;
+        }
+
+        async function updateScores() {
+            const ok = await loadViaFetch();
+            if (!ok) {
+                loadViaScript();
+            }
+        }
+
+        setInterval(updateScores, 800);
+        updateScores();
+    </script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+# OBS Overlay Configuration - Edit anytime and restart round to apply
+# ===================================================================
+
+# TEAM NAMES
+# Change these to whatever you want displayed in OBS
+team1_display_name=NAVI
+team2_display_name=Aimbots
+
+# COLORS (RGB format: 0-255)
+# Main scoreboard colors
+background_color=0,0,0,0.9
+border_color=0,255,65
+
+# Text colors
+default_text_color=0,255,65
+team2_color=95,78,248
+status_color=255,170,0
+
+# Winning team colors
+winning_color=0,255,65
+losing_color=255,71,87
+tie_color=255,255,0
+
+# VISUAL SETTINGS
+font_size=32
+border_width=3
+glow_intensity=15
+
+# STATUS MESSAGES
+# Customize what shows during different match phases
+status_warmup=WARMUP
+status_live=LIVE
+status_knife=KNIFE ROUND
+status_halftime=HALF TIME
+status_overtime=OVERTIME
+
+# INSTRUCTIONS:
+# 1. Edit any values above
+# 2. Save this file (Ctrl+S)  
+# 3. Restart the round in CS (mp_restartgame 1)
+# 4. Changes appear immediately in OBS
+#
+# Note: RGB colors range from 0-255
+# Example colors:
+# Red: 255,0,0
+# Green: 0,255,0  
+# Blue: 0,0,255
+# White: 255,255,255
+# Yellow: 255,255,0
+# Purple: 128,0,128

@@ -1,0 +1,6 @@
+# OBS Overlay Git Ignore
+__pycache__/
+*.py[cod]
+*.bak
+*.tmp
+.env

@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS 1.6 Esports Tournament Broadcast Overlay</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+    <script src="cs_sprites.js"></script>
+    <style>
+        :root {
+            --team1-color: #0077ff; /* CT Blue */
+            --team2-color: #d62828; /* T Red */
+            --status-color: #ffaa00;
+            --border-color: #00ff41;
+            --bg-dark: rgba(10, 16, 26, 0.92);
+            --bar-height: 32px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* ========================================================
+           1. TOP SCOREBOARD
+           ======================================================== */
+        .top-scoreboard-wrapper {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .scoreboard-container {
+            display: inline-flex;
+            align-items: center;
+            background: var(--bg-dark);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 8px 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 255, 65, 0.2);
+            backdrop-filter: blur(12px);
+            min-width: 560px;
+            max-width: 850px;
+            transition: border-color 0.4s ease;
+        }
+
+        .team-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex: 1;
+        }
+
+        .team1 {
+            justify-content: flex-end;
+            text-align: right;
+        }
+
+        .team2 {
+            justify-content: flex-start;
+            text-align: left;
+        }
+
+        .team-title {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+        }
+
+        .team1 .team-title { color: var(--team1-color); }
+        .team2 .team-title { color: var(--team2-color); }
+
+        .score-pill {
+            font-family: 'Teko', sans-serif;
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1;
+            min-width: 48px;
+            height: 46px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 0 8px;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s ease;
+        }
+
+        .team1 .score-pill {
+            color: var(--team1-color);
+            border: 1px solid rgba(0, 119, 255, 0.4);
+        }
+
+        .team2 .score-pill {
+            color: var(--team2-color);
+            border: 1px solid rgba(214, 40, 40, 0.4);
+        }
+
+        .score-bump { animation: bump 0.4s ease-out; }
+        @keyframes bump {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .center-hub {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 18px;
+        }
+
+        .status-badge {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(255, 170, 0, 0.18);
+            color: var(--status-color);
+            border: 1px solid var(--status-color);
+            margin-bottom: 2px;
+        }
+
+        .status-badge.live {
+            background: rgba(255, 71, 87, 0.2);
+            color: #ff4757;
+            border-color: #ff4757;
+            animation: pulse-live 2s infinite;
+        }
+
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(0.97); }
+        }
+
+        .vs-text {
+            font-size: 16px;
+            font-weight: 700;
+            color: #6a7c93;
+            letter-spacing: 1px;
+        }
+
+        .timer-hub {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 28px;
+        }
+
+        .round-clock {
+            font-family: 'Teko', sans-serif;
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1;
+            color: #f1f5f9;
+            letter-spacing: 1.5px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+        }
+
+        .round-clock.freeze {
+            color: #38bdf8;
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+        }
+
+        .round-clock.defused {
+            color: #4ade80;
+            font-size: 20px;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 8px rgba(74, 222, 128, 0.7);
+        }
+
+        .round-clock.exploded {
+            color: #f87171;
+            font-size: 20px;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 8px rgba(248, 113, 113, 0.7);
+        }
+
+        .bomb-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(220, 38, 38, 0.35);
+            border: 1.5px solid #ef4444;
+            border-radius: 6px;
+            padding: 2px 10px;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+            animation: pulse-bomb-banner 1s infinite alternate ease-in-out;
+        }
+
+        .bomb-badge.critical {
+            background: rgba(220, 38, 38, 0.65);
+            border-color: #ff2222;
+            animation: pulse-bomb-banner 0.4s infinite alternate ease-in-out;
+        }
+
+        .bomb-badge .bomb-icon-img {
+            height: 22px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.85));
+        }
+
+        .bomb-badge .bomb-timer {
+            font-family: 'Teko', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            line-height: 1;
+            color: #ffffff;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(239, 68, 68, 0.95);
+        }
+
+        @keyframes pulse-bomb-banner {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+            }
+            100% {
+                transform: scale(1.08);
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.95);
+            }
+        }
+
+        /* ========================================================
+           2. SIDE ROSTERS (LEFT CT & RIGHT T) - AUTHENTIC CS 1.6
+           ======================================================== */
+        .roster-column {
+            position: absolute;
+            top: 25%;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 90;
+        }
+
+        .roster-left {
+            left: 20px;
+            align-items: flex-start;
+        }
+
+        .roster-right {
+            right: 20px;
+            align-items: flex-end;
+        }
+
+        /* Player Item Row */
+        .player-row {
+            display: inline-flex;
+            align-items: center;
+            height: var(--bar-height);
+            font-size: 15px;
+            transition: opacity 0.3s ease, filter 0.3s ease;
+        }
+
+        .player-row.dead {
+            opacity: 0.55;
+            filter: grayscale(40%);
+        }
+
+        /* CT Player Styling (Left Side - Default Dark Blue) */
+        .ct-hp {
+            width: 42px;
+            height: var(--bar-height);
+            background: #14386b; /* Authentic CS 1.6 CT Dark Blue */
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border-top-left-radius: 3px;
+            border-bottom-left-radius: 3px;
+            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .player-row.dead .ct-hp {
+            background: #0d1a2d !important;
+            color: #64748b !important;
+        }
+
+        .ct-name {
+            height: var(--bar-height);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 140px;
+            max-width: 210px;
+            background: rgba(15, 22, 34, 0.90);
+            border-top-right-radius: 3px;
+            border-bottom-right-radius: 3px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .player-row.dead .ct-name {
+            background: rgba(12, 16, 24, 0.7) !important;
+            color: #728096 !important;
+        }
+
+        /* T Player Styling (Right Side - Default Tournament Red) */
+        .t-name {
+            height: var(--bar-height);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 12px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 140px;
+            max-width: 210px;
+            background: #b91c1c; /* Authentic CS 1.6 Stream Solid Red */
+            border-top-left-radius: 3px;
+            border-bottom-left-radius: 3px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .player-row.dead .t-name {
+            background: rgba(20, 24, 32, 0.72) !important;
+            color: #728096 !important;
+            font-weight: 700 !important;
+        }
+
+        .t-hp {
+            width: 42px;
+            height: var(--bar-height);
+            background: #7f1d1d; /* Deep Dark Red HP Box */
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border-top-right-radius: 3px;
+            border-bottom-right-radius: 3px;
+            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .player-row.dead .t-hp {
+            background: #11151c !important;
+            color: #64748b !important;
+        }
+
+        /* Weapon Silhouettes */
+        .weapon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: var(--bar-height);
+            padding: 0 6px;
+        }
+
+        .icon-weapon-ct {
+            height: 18px;
+            width: auto;
+            max-width: 60px;
+            object-fit: contain;
+            transform: scaleX(-1); /* Points muzzle towards player name */
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85));
+        }
+
+        .icon-weapon-t {
+            height: 18px;
+            width: auto;
+            max-width: 60px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85));
+        }
+
+        /* Utility Icons (Defuser & C4) */
+        .icon-kit {
+            height: 22px;
+            width: auto;
+            margin-left: 6px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9));
+        }
+
+        .icon-c4 {
+            height: 22px;
+            width: auto;
+            margin-right: 6px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9));
+            animation: pulse-c4 1.5s infinite;
+        }
+
+        @keyframes pulse-c4 {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.7)); }
+            50% { transform: scale(1.12); filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.9)); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================
+         TOP MATCH SCOREBOARD
+         ========================================== -->
+    <div class="top-scoreboard-wrapper">
+        <div class="scoreboard-container" id="board">
+            <div class="team-box team1">
+                <span class="team-title" id="team1Name">COUNTER-TERRORISTS</span>
+                <div class="score-pill" id="team1Score">0</div>
+            </div>
+
+            <div class="center-hub">
+                <div class="status-badge" id="matchStatus">WAITING</div>
+                <div class="timer-hub" id="timerHub">
+                    <span class="vs-text" id="vsText">VS</span>
+                    <span class="round-clock" id="roundClock" style="display: none;">1:45</span>
+                    <div class="bomb-badge" id="bombBadge" style="display: none;">
+                        <img id="bombIconImg" class="bomb-icon-img" alt="C4">
+                        <span class="bomb-timer" id="bombTimer">0:35</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="team-box team2">
+                <div class="score-pill" id="team2Score">0</div>
+                <span class="team-title" id="team2Name">TERRORISTS</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         LEFT ROSTER: TEAM 1 (CT)
+         ========================================== -->
+    <div class="roster-column roster-left" id="rosterCT">
+        <!-- Rendered dynamically -->
+    </div>
+
+    <!-- ==========================================
+         RIGHT ROSTER: TEAM 2 (T)
+         ========================================== -->
+    <div class="roster-column roster-right" id="rosterT">
+        <!-- Rendered dynamically -->
+    </div>
+
+    <script>
+        let prevScore1 = null;
+        let prevScore2 = null;
+
+        // CS 1.6 Weapon Sprite Resolver
+        function getCsWeaponSprite(weaponName) {
+            if (!weaponName || !window.CS_SPRITES) return '';
+            let w = weaponName.toLowerCase().trim().replace(/^weapon_/, '');
+            if (w === 'c4') return ''; // Dedicated bomb icon is displayed, do not duplicate in weapon slot
+            if (w === 'smokegrenade') w = 'grenade';
+            if (w === 'mp5navy') w = 'mp5';
+            if (w === 'glock18') w = 'glock';
+            return window.CS_SPRITES[w] || '';
+        }
+
+        // ==========================================
+        // 1. TOP SCOREBOARD CALLBACKS
+        // ==========================================
+        window.setScores = function(t1Name, t1Score, t2Name, t2Score, status, t1Color, t2Color, borderColor, statusColor) {
+            if (t1Color) document.documentElement.style.setProperty('--team1-color', t1Color);
+            if (t2Color) document.documentElement.style.setProperty('--team2-color', t2Color);
+            if (borderColor) document.documentElement.style.setProperty('--border-color', borderColor);
+            if (statusColor) document.documentElement.style.setProperty('--status-color', statusColor);
+
+            const t1NameEl = document.getElementById('team1Name');
+            const t2NameEl = document.getElementById('team2Name');
+            if (t1NameEl && t1Name) t1NameEl.textContent = t1Name;
+            if (t2NameEl && t2Name) t2NameEl.textContent = t2Name;
+
+            const t1ScoreEl = document.getElementById('team1Score');
+            const t2ScoreEl = document.getElementById('team2Score');
+            if (t1ScoreEl && t2ScoreEl) {
+                const s1 = parseInt(t1Score, 10) || 0;
+                const s2 = parseInt(t2Score, 10) || 0;
+                if (prevScore1 !== null && s1 !== prevScore1) {
+                    t1ScoreEl.classList.remove('score-bump');
+                    void t1ScoreEl.offsetWidth;
+                    t1ScoreEl.classList.add('score-bump');
+                }
+                if (prevScore2 !== null && s2 !== prevScore2) {
+                    t2ScoreEl.classList.remove('score-bump');
+                    void t2ScoreEl.offsetWidth;
+                    t2ScoreEl.classList.add('score-bump');
+                }
+                t1ScoreEl.textContent = s1;
+                t2ScoreEl.textContent = s2;
+                prevScore1 = s1;
+                prevScore2 = s2;
+            }
+
+            const statusEl = document.getElementById('matchStatus');
+            if (statusEl) {
+                const st = (status || 'WAITING').toUpperCase();
+                statusEl.textContent = st;
+                statusEl.classList.toggle('live', st === 'LIVE');
+            }
+        };
+
+        // ==========================================
+        // 2. ROUND CLOCK & C4 BOMB TIMER
+        // ==========================================
+        function formatTime(totalSeconds) {
+            if (typeof totalSeconds !== 'number' || totalSeconds < 0) totalSeconds = 0;
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = Math.floor(totalSeconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function updateRoundTimer(timer) {
+            const vsEl = document.getElementById('vsText');
+            const clockEl = document.getElementById('roundClock');
+            const bombEl = document.getElementById('bombBadge');
+            const bombTimerEl = document.getElementById('bombTimer');
+            if (!clockEl || !bombEl || !vsEl) return;
+
+            if (!timer || !timer.state || timer.state === 'waiting') {
+                vsEl.style.display = 'block';
+                clockEl.style.display = 'none';
+                bombEl.style.display = 'none';
+                return;
+            }
+
+            const isPlanted = timer.state === 'planted' || timer.bomb_planted === 1;
+
+            if (isPlanted) {
+                vsEl.style.display = 'none';
+                clockEl.style.display = 'none';
+                bombEl.style.display = 'inline-flex';
+                const bombImgEl = document.getElementById('bombIconImg');
+                if (bombImgEl && (!bombImgEl.src || bombImgEl.getAttribute('src') === '')) {
+                    bombImgEl.src = (window.CS_SPRITES && window.CS_SPRITES.c4) || '';
+                }
+                const c4Sec = timer.c4_seconds !== undefined ? timer.c4_seconds : 35;
+                if (bombTimerEl) {
+                    bombTimerEl.textContent = formatTime(c4Sec);
+                }
+                bombEl.classList.toggle('critical', c4Sec <= 10);
+            } else if (timer.state === 'defused') {
+                vsEl.style.display = 'none';
+                bombEl.style.display = 'none';
+                clockEl.style.display = 'block';
+                clockEl.className = 'round-clock defused';
+                clockEl.textContent = 'DEFUSED';
+            } else if (timer.state === 'exploded') {
+                vsEl.style.display = 'none';
+                bombEl.style.display = 'none';
+                clockEl.style.display = 'block';
+                clockEl.className = 'round-clock exploded';
+                clockEl.textContent = 'EXPLODED';
+            } else if (timer.state === 'freeze') {
+                vsEl.style.display = 'none';
+                bombEl.style.display = 'none';
+                clockEl.style.display = 'block';
+                clockEl.className = 'round-clock freeze';
+                clockEl.textContent = formatTime(timer.seconds || 0);
+            } else {
+                // 'round' or 'ended'
+                vsEl.style.display = 'none';
+                bombEl.style.display = 'none';
+                clockEl.style.display = 'block';
+                clockEl.className = 'round-clock';
+                clockEl.textContent = formatTime(timer.seconds || 0);
+            }
+        }
+
+        // ==========================================
+        // 3. PLAYER ROSTERS CALLBACK
+        // ==========================================
+        window.setPlayerData = function(data) {
+            if (!data) return;
+            if (data.timer) {
+                updateRoundTimer(data.timer);
+            }
+            renderTeamRoster('rosterCT', data.ct || [], true);
+            renderTeamRoster('rosterT', data.t || [], false);
+        };
+
+        function renderTeamRoster(containerId, players, isLeft) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const defuserSrc = (window.CS_SPRITES && window.CS_SPRITES.defuser) || '';
+            const c4Src = (window.CS_SPRITES && window.CS_SPRITES.c4) || '';
+
+            let html = '';
+            for (let i = 0; i < players.length; i++) {
+                const p = players[i];
+                const isAlive = p.alive === 1;
+                const hp = isAlive ? p.hp : 0;
+                const deadClass = isAlive ? '' : 'dead';
+                const weaponSrc = isAlive ? getCsWeaponSprite(p.weapon) : '';
+
+                if (isLeft) {
+                    // LEFT COLUMN (CT): [HP: Dark Blue] [Player Name: Dark Slate] [Defuser Kit?] [Weapon Silhouette]
+                    const kitHtml = (isAlive && p.kit && defuserSrc) ?
+                        `<img src="${defuserSrc}" class="icon-kit" alt="Defuser">` : '';
+
+                    const weaponHtml = weaponSrc ?
+                        `<div class="weapon-box"><img src="${weaponSrc}" class="icon-weapon-ct" alt="${escapeHtml(p.weapon)}"></div>` : '';
+
+                    html += `
+                        <div class="player-row ${deadClass}">
+                            <div class="ct-hp">${hp}</div>
+                            <div class="ct-name">${escapeHtml(p.name)}</div>
+                            ${kitHtml}
+                            ${weaponHtml}
+                        </div>
+                    `;
+                } else {
+                    // RIGHT COLUMN (T): [Weapon Silhouette] [C4 Bomb?] [Player Name: Solid Red] [HP: Deep Dark Red]
+                    const hasBomb = isAlive && (p.bomb || (p.weapon && p.weapon.toLowerCase().replace(/^weapon_/, '') === 'c4'));
+                    const bombHtml = (hasBomb && c4Src) ?
+                        `<img src="${c4Src}" class="icon-c4" alt="C4 Bomb">` : '';
+
+                    const weaponHtml = weaponSrc ?
+                        `<div class="weapon-box"><img src="${weaponSrc}" class="icon-weapon-t" alt="${escapeHtml(p.weapon)}"></div>` : '';
+
+                    html += `
+                        <div class="player-row ${deadClass}">
+                            ${weaponHtml}
+                            ${bombHtml}
+                            <div class="t-name">${escapeHtml(p.name)}</div>
+                            <div class="t-hp">${hp}</div>
+                        </div>
+                    `;
+                }
+            }
+
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, function(m) {
+                switch(m) {
+                    case '&': return '&amp;';
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '"': return '&quot;';
+                    case '\'': return '&#39;';
+                    default: return m;
+                }
+            });
+        }
+
+        // ==========================================
+        // 3. CONTINUOUS DATA LOADERS (Zero CORS)
+        // ==========================================
+        function loadLiveScoresScript() {
+            const old = document.getElementById('scoresScript');
+            if (old) old.remove();
+            const s = document.createElement('script');
+            s.id = 'scoresScript';
+            s.src = `live_data.js?_=${Date.now()}`;
+            document.body.appendChild(s);
+        }
+
+        function loadLivePlayersScript() {
+            const old = document.getElementById('playersScript');
+            if (old) old.remove();
+            const s = document.createElement('script');
+            s.id = 'playersScript';
+            s.src = `live_players.js?_=${Date.now()}`;
+            document.body.appendChild(s);
+        }
+
+        function pollAll() {
+            loadLiveScoresScript();
+            loadLivePlayersScript();
+        }
+
+        // Poll every 100ms for instantaneous frame-accurate broadcast sync
+        setInterval(pollAll, 100);
+        pollAll();
+
+        // Preload real CS 1.6 C4 sprite into bomb badge
+        if (window.CS_SPRITES && window.CS_SPRITES.c4) {
+            const bImg = document.getElementById('bombIconImg');
+            if (bImg) bImg.src = window.CS_SPRITES.c4;
+        }
+    </script>
+</body>
+</html>

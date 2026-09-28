@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS 1.6 Esports Player HUD (Side Rosters Only)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;800&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+    <script src="cs_sprites.js"></script>
+    <style>
+        :root {
+            --bar-height: 32px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: transparent;
+            font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* ========================================================
+           SIDE ROSTERS (LEFT CT & RIGHT T) - AUTHENTIC CS 1.6
+           ======================================================== */
+        .roster-column {
+            position: absolute;
+            top: 25%;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 90;
+        }
+
+        .roster-left {
+            left: 20px;
+            align-items: flex-start;
+        }
+
+        .roster-right {
+            right: 20px;
+            align-items: flex-end;
+        }
+
+        /* Player Item Row */
+        .player-row {
+            display: inline-flex;
+            align-items: center;
+            height: var(--bar-height);
+            font-size: 15px;
+            transition: opacity 0.3s ease, filter 0.3s ease;
+        }
+
+        .player-row.dead {
+            opacity: 0.55;
+            filter: grayscale(40%);
+        }
+
+        /* CT Player Styling (Left Side - Default Dark Blue) */
+        .ct-hp {
+            width: 42px;
+            height: var(--bar-height);
+            background: #14386b; /* Authentic CS 1.6 CT Dark Blue */
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border-top-left-radius: 3px;
+            border-bottom-left-radius: 3px;
+            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .player-row.dead .ct-hp {
+            background: #0d1a2d !important;
+            color: #64748b !important;
+        }
+
+        .ct-name {
+            height: var(--bar-height);
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 140px;
+            max-width: 210px;
+            background: rgba(15, 22, 34, 0.90);
+            border-top-right-radius: 3px;
+            border-bottom-right-radius: 3px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .player-row.dead .ct-name {
+            background: rgba(12, 16, 24, 0.7) !important;
+            color: #728096 !important;
+        }
+
+        /* T Player Styling (Right Side - Default Tournament Red) */
+        .t-name {
+            height: var(--bar-height);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 12px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-width: 140px;
+            max-width: 210px;
+            background: #b91c1c; /* Authentic CS 1.6 Stream Solid Red */
+            border-top-left-radius: 3px;
+            border-bottom-left-radius: 3px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            border-right: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .player-row.dead .t-name {
+            background: rgba(20, 24, 32, 0.72) !important;
+            color: #728096 !important;
+            font-weight: 700 !important;
+        }
+
+        .t-hp {
+            width: 42px;
+            height: var(--bar-height);
+            background: #7f1d1d; /* Deep Dark Red HP Box */
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border-top-right-radius: 3px;
+            border-bottom-right-radius: 3px;
+            box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .player-row.dead .t-hp {
+            background: #11151c !important;
+            color: #64748b !important;
+        }
+
+        /* Weapon Silhouettes */
+        .weapon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: var(--bar-height);
+            padding: 0 6px;
+        }
+
+        .icon-weapon-ct {
+            height: 18px;
+            width: auto;
+            max-width: 60px;
+            object-fit: contain;
+            transform: scaleX(-1); /* Points muzzle towards player name */
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85));
+        }
+
+        .icon-weapon-t {
+            height: 18px;
+            width: auto;
+            max-width: 60px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85));
+        }
+
+        /* Utility Icons (Defuser & C4) */
+        .icon-kit {
+            height: 22px;
+            width: auto;
+            margin-left: 6px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9));
+        }
+
+        .icon-c4 {
+            height: 22px;
+            width: auto;
+            margin-right: 6px;
+            object-fit: contain;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.9));
+            animation: pulse-c4 1.5s infinite;
+        }
+
+        @keyframes pulse-c4 {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.7)); }
+            50% { transform: scale(1.12); filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.9)); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LEFT ROSTER (CT) -->
+    <div class="roster-column roster-left" id="rosterCT"></div>
+
+    <!-- RIGHT ROSTER (T) -->
+    <div class="roster-column roster-right" id="rosterT"></div>
+
+    <script>
+        // CS 1.6 Weapon Sprite Resolver
+        function getCsWeaponSprite(weaponName) {
+            if (!weaponName || !window.CS_SPRITES) return '';
+            let w = weaponName.toLowerCase().trim().replace(/^weapon_/, '');
+            if (w === 'c4') return ''; // Dedicated bomb icon is displayed, do not duplicate in weapon slot
+            if (w === 'smokegrenade') w = 'grenade';
+            if (w === 'mp5navy') w = 'mp5';
+            if (w === 'glock18') w = 'glock';
+            return window.CS_SPRITES[w] || '';
+        }
+
+        window.setScores = function(t1Name, t1Score, t2Name, t2Score, status, t1Color, t2Color) {
+            // Unused in side-only HUD
+        };
+
+        window.setPlayerData = function(data) {
+            if (!data) return;
+            renderTeamRoster('rosterCT', data.ct || [], true);
+            renderTeamRoster('rosterT', data.t || [], false);
+        };
+
+        function renderTeamRoster(containerId, players, isLeft) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const defuserSrc = (window.CS_SPRITES && window.CS_SPRITES.defuser) || '';
+            const c4Src = (window.CS_SPRITES && window.CS_SPRITES.c4) || '';
+
+            let html = '';
+            for (let i = 0; i < players.length; i++) {
+                const p = players[i];
+                const isAlive = p.alive === 1;
+                const hp = isAlive ? p.hp : 0;
+                const deadClass = isAlive ? '' : 'dead';
+                const weaponSrc = isAlive ? getCsWeaponSprite(p.weapon) : '';
+
+                if (isLeft) {
+                    // LEFT COLUMN (CT): [HP: Dark Blue] [Player Name: Dark Slate] [Defuser Kit?] [Weapon Silhouette]
+                    const kitHtml = (isAlive && p.kit && defuserSrc) ?
+                        `<img src="${defuserSrc}" class="icon-kit" alt="Defuser">` : '';
+
+                    const weaponHtml = weaponSrc ?
+                        `<div class="weapon-box"><img src="${weaponSrc}" class="icon-weapon-ct" alt="${escapeHtml(p.weapon)}"></div>` : '';
+
+                    html += `
+                        <div class="player-row ${deadClass}">
+                            <div class="ct-hp">${hp}</div>
+                            <div class="ct-name">${escapeHtml(p.name)}</div>
+                            ${kitHtml}
+                            ${weaponHtml}
+                        </div>
+                    `;
+                } else {
+                    // RIGHT COLUMN (T): [Weapon Silhouette] [C4 Bomb?] [Player Name: Solid Red] [HP: Deep Dark Red]
+                    const hasBomb = isAlive && (p.bomb || (p.weapon && p.weapon.toLowerCase().replace(/^weapon_/, '') === 'c4'));
+                    const bombHtml = (hasBomb && c4Src) ?
+                        `<img src="${c4Src}" class="icon-c4" alt="C4 Bomb">` : '';
+
+                    const weaponHtml = weaponSrc ?
+                        `<div class="weapon-box"><img src="${weaponSrc}" class="icon-weapon-t" alt="${escapeHtml(p.weapon)}"></div>` : '';
+
+                    html += `
+                        <div class="player-row ${deadClass}">
+                            ${weaponHtml}
+                            ${bombHtml}
+                            <div class="t-name">${escapeHtml(p.name)}</div>
+                            <div class="t-hp">${hp}</div>
+                        </div>
+                    `;
+                }
+            }
+
+            container.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>"']/g, function(m) {
+                switch(m) {
+                    case '&': return '&amp;';
+                    case '<': return '&lt;';
+                    case '>': return '&gt;';
+                    case '"': return '&quot;';
+                    case '\'': return '&#39;';
+                    default: return m;
+                }
+            });
+        }
+
+        function pollAll() {
+            const oldScores = document.getElementById('scoresScript');
+            if (oldScores) oldScores.remove();
+            const s1 = document.createElement('script');
+            s1.id = 'scoresScript';
+            s1.src = `live_data.js?_=${Date.now()}`;
+            document.body.appendChild(s1);
+
+            const oldPlayers = document.getElementById('playersScript');
+            if (oldPlayers) oldPlayers.remove();
+            const s2 = document.createElement('script');
+            s2.id = 'playersScript';
+            s2.src = `live_players.js?_=${Date.now()}`;
+            document.body.appendChild(s2);
+        }
+
+        setInterval(pollAll, 250);
+        pollAll();
+    </script>
+</body>
+</html>

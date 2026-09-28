@@ -1,0 +1,10 @@
+; Users configuration file template
+; File location: $moddir/addons/amxmodx/configs/users.ini
+;
+; Format of admin account:
+; <name|ip|steamid> <password> <access flags> <account flags>
+;
+; Examples:
+; "STEAM_0:0:123456" "" "abcdefghijklmnopqrstu" "ce"
+; "127.0.0.1" "" "abcdefghijklmnopqrstu" "de"
+; "Admin" "password123" "abcdefghijklmnopqrstu" "a"
